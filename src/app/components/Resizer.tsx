@@ -251,7 +251,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
   const canvasBg =
     s.bg === "transparent"
       ? {
-          backgroundImage: `repeating-conic-gradient(#c0c0c0 0% 25%,#e8e8e8 0% 50%)`,
+          backgroundImage: `repeating-conic-gradient(#d4d4d4 0% 25%,#f0f0f0 0% 50%)`,
           backgroundSize: "10px 10px",
         }
       : {};
@@ -809,7 +809,7 @@ export default function Resizer() {
                 id: "transparent" as const,
                 label: "透過",
                 style: {
-                  backgroundImage: `repeating-conic-gradient(${C.powder} 0% 25%,${C.mint} 0% 50%)`,
+                  backgroundImage: `repeating-conic-gradient(#d4d4d4 0% 25%,#f0f0f0 0% 50%)`,
                   backgroundSize: "8px 8px",
                   border: `1px solid ${C.powder}`,
                 },
