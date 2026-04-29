@@ -244,17 +244,17 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
     draw(c, img, s, preset.w, preset.h, dw, dh);
     const a = document.createElement("a");
     a.href = c.toDataURL("image/png");
-    a.download = `${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
+    a.download = `SNSリサイザー_${preset.w}x${preset.h}.png`;
     a.click();
   };
 
-  const previewBg =
+  const canvasBg =
     s.bg === "transparent"
       ? {
           backgroundImage: `repeating-conic-gradient(${C.powder} 0% 25%,${C.mint} 0% 50%)`,
           backgroundSize: "10px 10px",
         }
-      : { backgroundColor: C.mint };
+      : {};
 
   const hasOffset = (s.offset?.x || 0) !== 0 || (s.offset?.y || 0) !== 0;
 
@@ -287,7 +287,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
         style={{
-          ...previewBg,
+          backgroundColor: C.mint,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -297,14 +297,18 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
           userSelect: "none",
         }}
       >
-        <canvas
-          ref={ref}
+        <div
           style={{
-            display: "block",
+            ...canvasBg,
+            lineHeight: 0,
             boxShadow: "0 2px 10px rgba(30,48,72,0.15)",
-            pointerEvents: "none",
           }}
-        />
+        >
+          <canvas
+            ref={ref}
+            style={{ display: "block", pointerEvents: "none" }}
+          />
+        </div>
 
         {img && !isDragging && (
           <div
@@ -478,7 +482,7 @@ export default function Resizer() {
         draw(c, img, s, p.w, p.h, dw, dh);
         const a = document.createElement("a");
         a.href = c.toDataURL("image/png");
-        a.download = `${p.name.replace(/[\s/]+/g, "_")}_${p.w}x${p.h}.png`;
+        a.download = `SNSリサイザー_${p.w}x${p.h}.png`;
         a.click();
       }, i * 220)
     );
