@@ -244,7 +244,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
     draw(c, img, s, preset.w, preset.h, dw, dh);
     const a = document.createElement("a");
     a.href = c.toDataURL("image/png");
-    a.download = `${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
+    a.download = `SNS_${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
     a.click();
   };
 
