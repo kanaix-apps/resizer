@@ -523,7 +523,7 @@ export default function Resizer() {
               letterSpacing: "-0.5px",
             }}
           >
-            リサイザー
+            SNSリサイザー
           </div>
           <div
             style={{
