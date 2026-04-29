@@ -244,7 +244,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
     draw(c, img, s, preset.w, preset.h, dw, dh);
     const a = document.createElement("a");
     a.href = c.toDataURL("image/png");
-    a.download = `SNSリサイザー_${preset.w}x${preset.h}.png`;
+    a.download = `${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
     a.click();
   };
 
@@ -482,7 +482,7 @@ export default function Resizer() {
         draw(c, img, s, p.w, p.h, dw, dh);
         const a = document.createElement("a");
         a.href = c.toDataURL("image/png");
-        a.download = `SNSリサイザー_${p.w}x${p.h}.png`;
+        a.download = `${p.name.replace(/[\s/]+/g, "_")}_${p.w}x${p.h}.png`;
         a.click();
       }, i * 220)
     );
