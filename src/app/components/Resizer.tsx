@@ -254,7 +254,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
           backgroundImage: `repeating-conic-gradient(${C.powder} 0% 25%,${C.mint} 0% 50%)`,
           backgroundSize: "10px 10px",
         }
-      : { backgroundColor: s.bg === "white" ? C.mint : "#334155" };
+      : { backgroundColor: C.mint };
 
   const hasOffset = (s.offset?.x || 0) !== 0 || (s.offset?.y || 0) !== 0;
 
