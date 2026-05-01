@@ -160,6 +160,7 @@ interface CardProps {
 function Card({ preset, img, s, onOffsetChange }: CardProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const dragging = useRef(false);
+  const didDrag = useRef(false);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const offsetStart = useRef<Offset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -171,85 +172,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
     draw(ref.current, img, s, dw, dh, dw, dh);
   }, [img, s, dw, dh]);
 
-  const onMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (!img) return;
-      e.preventDefault();
-      dragging.current = true;
-      setIsDragging(true);
-      dragStart.current = { x: e.clientX, y: e.clientY };
-      offsetStart.current = { x: s.offset?.x || 0, y: s.offset?.y || 0 };
-    },
-    [img, s.offset]
-  );
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging.current || !dragStart.current) return;
-      const ddx = e.clientX - dragStart.current.x;
-      const ddy = e.clientY - dragStart.current.y;
-      onOffsetChange({
-        x: offsetStart.current.x + ddx,
-        y: offsetStart.current.y + ddy,
-      });
-    };
-    const onUp = () => {
-      if (!dragging.current) return;
-      dragging.current = false;
-      setIsDragging(false);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [onOffsetChange]);
-
-  const onTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!img) return;
-      const t = e.touches[0];
-      dragging.current = true;
-      dragStart.current = { x: t.clientX, y: t.clientY };
-      offsetStart.current = { x: s.offset?.x || 0, y: s.offset?.y || 0 };
-    },
-    [img, s.offset]
-  );
-
-  useEffect(() => {
-    const onTMove = (e: TouchEvent) => {
-      if (!dragging.current) return;
-      const t = e.touches[0];
-      const ddx = t.clientX - dragStart.current!.x;
-      const ddy = t.clientY - dragStart.current!.y;
-      onOffsetChange({
-        x: offsetStart.current.x + ddx,
-        y: offsetStart.current.y + ddy,
-      });
-    };
-    const onTEnd = () => {
-      dragging.current = false;
-    };
-    window.addEventListener("touchmove", onTMove);
-    window.addEventListener("touchend", onTEnd);
-    return () => {
-      window.removeEventListener("touchmove", onTMove);
-      window.removeEventListener("touchend", onTEnd);
-    };
-  }, [onOffsetChange]);
-
-  const dl = () => {
-    if (!img) return;
-    const c = document.createElement("canvas");
-    draw(c, img, s, preset.w, preset.h, dw, dh);
-    const a = document.createElement("a");
-    a.href = c.toDataURL("image/png");
-    a.download = `SNS_${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
-    a.click();
-  };
-
-  const cp = () => {
+  const cp = useCallback(() => {
     if (!img) return;
     const c = document.createElement("canvas");
     draw(c, img, s, preset.w, preset.h, dw, dh);
@@ -267,6 +190,90 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
         setTimeout(() => setCopied(false), 1800);
       }
     });
+  }, [img, s, preset.w, preset.h, dw, dh]);
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (!img) return;
+      e.preventDefault();
+      dragging.current = true;
+      didDrag.current = false;
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX, y: e.clientY };
+      offsetStart.current = { x: s.offset?.x || 0, y: s.offset?.y || 0 };
+    },
+    [img, s.offset]
+  );
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragging.current || !dragStart.current) return;
+      const ddx = e.clientX - dragStart.current.x;
+      const ddy = e.clientY - dragStart.current.y;
+      if (Math.abs(ddx) > 4 || Math.abs(ddy) > 4) didDrag.current = true;
+      onOffsetChange({
+        x: offsetStart.current.x + ddx,
+        y: offsetStart.current.y + ddy,
+      });
+    };
+    const onUp = () => {
+      if (!dragging.current) return;
+      if (!didDrag.current) cp();
+      dragging.current = false;
+      setIsDragging(false);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [onOffsetChange, cp]);
+
+  const onTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!img) return;
+      const t = e.touches[0];
+      dragging.current = true;
+      didDrag.current = false;
+      dragStart.current = { x: t.clientX, y: t.clientY };
+      offsetStart.current = { x: s.offset?.x || 0, y: s.offset?.y || 0 };
+    },
+    [img, s.offset]
+  );
+
+  useEffect(() => {
+    const onTMove = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      const t = e.touches[0];
+      const ddx = t.clientX - dragStart.current!.x;
+      const ddy = t.clientY - dragStart.current!.y;
+      if (Math.abs(ddx) > 4 || Math.abs(ddy) > 4) didDrag.current = true;
+      onOffsetChange({
+        x: offsetStart.current.x + ddx,
+        y: offsetStart.current.y + ddy,
+      });
+    };
+    const onTEnd = () => {
+      if (!didDrag.current) cp();
+      dragging.current = false;
+    };
+    window.addEventListener("touchmove", onTMove);
+    window.addEventListener("touchend", onTEnd);
+    return () => {
+      window.removeEventListener("touchmove", onTMove);
+      window.removeEventListener("touchend", onTEnd);
+    };
+  }, [onOffsetChange, cp]);
+
+  const dl = () => {
+    if (!img) return;
+    const c = document.createElement("canvas");
+    draw(c, img, s, preset.w, preset.h, dw, dh);
+    const a = document.createElement("a");
+    a.href = c.toDataURL("image/png");
+    a.download = `SNS_${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
+    a.click();
   };
 
   const canvasBg =
@@ -346,7 +353,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
               letterSpacing: "0.2px",
             }}
           >
-            ドラッグで移動
+            クリックでコピー・ドラッグで移動
           </div>
         )}
 
