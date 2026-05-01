@@ -150,21 +150,52 @@ function Lbl({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Toast({ message, visible }: { message: string; visible: boolean }) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        bottom: 32,
+        left: "50%",
+        transform: `translateX(-50%) translateY(${visible ? 0 : 16}px)`,
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.22s, transform 0.22s",
+        pointerEvents: "none",
+        zIndex: 9999,
+        background: C.navy,
+        color: C.white,
+        borderRadius: 10,
+        padding: "10px 20px",
+        fontSize: 13,
+        fontWeight: 600,
+        boxShadow: "0 6px 24px rgba(30,48,72,0.22)",
+        whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <span style={{ fontSize: 15 }}>✓</span>
+      {message}
+    </div>
+  );
+}
+
 interface CardProps {
   preset: Preset;
   img: HTMLImageElement | null;
   s: State;
   onOffsetChange: (offset: Offset) => void;
+  onCopied: (name: string) => void;
 }
 
-function Card({ preset, img, s, onOffsetChange }: CardProps) {
+function Card({ preset, img, s, onOffsetChange, onCopied }: CardProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const dragging = useRef(false);
   const didDrag = useRef(false);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const offsetStart = useRef<Offset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const { w: dw, h: dh } = calcSize(preset);
 
@@ -182,15 +213,13 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
         ]);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
+        onCopied(preset.name);
       } catch {
         await navigator.clipboard.writeText(c.toDataURL("image/png"));
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
+        onCopied(preset.name);
       }
     });
-  }, [img, s, preset.w, preset.h, dw, dh]);
+  }, [img, s, preset.w, preset.h, preset.name, dw, dh, onCopied]);
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -418,27 +447,24 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
             disabled={!img}
             title="クリップボードにコピー"
             style={{
-              background: copied ? "#2e7d5e" : img ? C.mint : C.mint,
-              color: copied ? C.white : img ? C.steel : C.textM,
-              border: `1px solid ${copied ? "#2e7d5e" : img ? C.powder : C.powder}`,
+              background: img ? C.mint : C.mint,
+              color: img ? C.steel : C.textM,
+              border: `1px solid ${img ? C.powder : C.powder}`,
               borderRadius: 6,
               padding: "5px 10px",
               fontSize: 11,
               fontWeight: 700,
               cursor: img ? "pointer" : "default",
-              transition: "background 0.2s,color 0.2s,border-color 0.2s,transform 0.1s",
+              transition: "background 0.15s,transform 0.1s",
               whiteSpace: "nowrap",
             }}
             onMouseEnter={(e) => {
-              if (img && !copied)
+              if (img)
                 (e.currentTarget as HTMLButtonElement).style.background =
                   C.powder;
             }}
             onMouseLeave={(e) => {
-              if (!copied)
-                (e.currentTarget as HTMLButtonElement).style.background = img
-                  ? C.mint
-                  : C.mint;
+              (e.currentTarget as HTMLButtonElement).style.background = C.mint;
             }}
             onMouseDown={(e) => {
               if (img)
@@ -450,7 +476,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
                 "scale(1)";
             }}
           >
-            {copied ? "✓ コピー" : "コピー"}
+            コピー
           </button>
           <button
             onClick={dl}
@@ -505,6 +531,17 @@ export default function Resizer() {
     offset: { x: 0, y: 0 },
   });
   const fref = useRef<HTMLInputElement>(null);
+  const [toast, setToast] = useState({ visible: false, message: "" });
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((name: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ visible: true, message: `${name} をコピーしました` });
+    toastTimer.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      2200
+    );
+  }, []);
 
   const load = (file: File | null | undefined, name?: string) => {
     if (!file || !file.type.startsWith("image/")) return;
@@ -954,10 +991,12 @@ export default function Resizer() {
               img={img}
               s={s}
               onOffsetChange={onOffsetChange}
+              onCopied={showToast}
             />
           ))}
         </div>
       </div>
+      <Toast message={toast.message} visible={toast.visible} />
     </div>
   );
 }
