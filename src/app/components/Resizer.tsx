@@ -382,7 +382,7 @@ function Card({ preset, img, s, onOffsetChange, onCopied }: CardProps) {
               letterSpacing: "0.2px",
             }}
           >
-            クリックでコピー・ドラッグで移動
+            ドラッグで移動
           </div>
         )}
 
