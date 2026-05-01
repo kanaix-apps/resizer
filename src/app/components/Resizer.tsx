@@ -186,7 +186,7 @@ interface CardProps {
   img: HTMLImageElement | null;
   s: State;
   onOffsetChange: (offset: Offset) => void;
-  onCopied: (name: string) => void;
+  onCopied: () => void;
 }
 
 function Card({ preset, img, s, onOffsetChange, onCopied }: CardProps) {
@@ -213,13 +213,13 @@ function Card({ preset, img, s, onOffsetChange, onCopied }: CardProps) {
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob }),
         ]);
-        onCopied(preset.name);
+        onCopied();
       } catch {
         await navigator.clipboard.writeText(c.toDataURL("image/png"));
-        onCopied(preset.name);
+        onCopied();
       }
     });
-  }, [img, s, preset.w, preset.h, preset.name, dw, dh, onCopied]);
+  }, [img, s, preset.w, preset.h, dw, dh, onCopied]);
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -534,9 +534,9 @@ export default function Resizer() {
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showToast = useCallback((name: string) => {
+  const showToast = useCallback(() => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ visible: true, message: `${name} をコピーしました` });
+    setToast({ visible: true, message: "コピーしました" });
     toastTimer.current = setTimeout(
       () => setToast((t) => ({ ...t, visible: false })),
       2200
