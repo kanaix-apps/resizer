@@ -163,6 +163,7 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const offsetStart = useRef<Offset>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { w: dw, h: dh } = calcSize(preset);
 
@@ -246,6 +247,26 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
     a.href = c.toDataURL("image/png");
     a.download = `SNS_${preset.name.replace(/[\s/]+/g, "_")}_${preset.w}x${preset.h}.png`;
     a.click();
+  };
+
+  const cp = () => {
+    if (!img) return;
+    const c = document.createElement("canvas");
+    draw(c, img, s, preset.w, preset.h, dw, dh);
+    c.toBlob(async (blob) => {
+      if (!blob) return;
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      } catch {
+        await navigator.clipboard.writeText(c.toDataURL("image/png"));
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1800);
+      }
+    });
   };
 
   const canvasBg =
@@ -384,39 +405,83 @@ function Card({ preset, img, s, onOffsetChange }: CardProps) {
             {preset.sub}
           </div>
         </div>
-        <button
-          onClick={dl}
-          disabled={!img}
-          style={{
-            background: img ? C.navy : C.mint,
-            color: img ? C.white : C.textM,
-            border: "none",
-            borderRadius: 6,
-            padding: "5px 14px",
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: img ? "pointer" : "default",
-            transition: "background 0.15s,transform 0.1s",
-          }}
-          onMouseEnter={(e) => {
-            if (img)
-              (e.currentTarget as HTMLButtonElement).style.background = C.steel;
-          }}
-          onMouseLeave={(e) => {
-            if (img)
-              (e.currentTarget as HTMLButtonElement).style.background = C.navy;
-          }}
-          onMouseDown={(e) => {
-            if (img)
+        <div style={{ display: "flex", gap: 5 }}>
+          <button
+            onClick={cp}
+            disabled={!img}
+            title="クリップボードにコピー"
+            style={{
+              background: copied ? "#2e7d5e" : img ? C.mint : C.mint,
+              color: copied ? C.white : img ? C.steel : C.textM,
+              border: `1px solid ${copied ? "#2e7d5e" : img ? C.powder : C.powder}`,
+              borderRadius: 6,
+              padding: "5px 10px",
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: img ? "pointer" : "default",
+              transition: "background 0.2s,color 0.2s,border-color 0.2s,transform 0.1s",
+              whiteSpace: "nowrap",
+            }}
+            onMouseEnter={(e) => {
+              if (img && !copied)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  C.powder;
+            }}
+            onMouseLeave={(e) => {
+              if (!copied)
+                (e.currentTarget as HTMLButtonElement).style.background = img
+                  ? C.mint
+                  : C.mint;
+            }}
+            onMouseDown={(e) => {
+              if (img)
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "scale(0.93)";
+            }}
+            onMouseUp={(e) => {
               (e.currentTarget as HTMLButtonElement).style.transform =
-                "scale(0.93)";
-          }}
-          onMouseUp={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
-          }}
-        >
-          DL
-        </button>
+                "scale(1)";
+            }}
+          >
+            {copied ? "✓ コピー" : "コピー"}
+          </button>
+          <button
+            onClick={dl}
+            disabled={!img}
+            style={{
+              background: img ? C.navy : C.mint,
+              color: img ? C.white : C.textM,
+              border: "none",
+              borderRadius: 6,
+              padding: "5px 14px",
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: img ? "pointer" : "default",
+              transition: "background 0.15s,transform 0.1s",
+            }}
+            onMouseEnter={(e) => {
+              if (img)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  C.steel;
+            }}
+            onMouseLeave={(e) => {
+              if (img)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  C.navy;
+            }}
+            onMouseDown={(e) => {
+              if (img)
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  "scale(0.93)";
+            }}
+            onMouseUp={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.transform =
+                "scale(1)";
+            }}
+          >
+            DL
+          </button>
+        </div>
       </div>
     </div>
   );
